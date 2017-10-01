@@ -1,6 +1,7 @@
 """Bot that interacts with the cleverbot.com api"""
 
 import json
+from urllib.parse import quote
 
 import aiohttp
 import discord
@@ -19,9 +20,11 @@ bot.convs = dict()
 
 
 async def respond(msg, query):
+    print('-'*20)
 
     if not query:
         return 'Sorry, but you didn\'t ask anything :/ do `@{} what\'s your name?` to ask me what my name is!'.format(bot.user.display_name)
+    print('Input query from {} : {}'.format(msg.author, query))
 
     if msg.author in bot.convs.keys():
         cs = bot.convs[msg.author]
@@ -31,20 +34,25 @@ async def respond(msg, query):
     params = {
         "key": config.Cleverbot_api_key,
         "cs": cs,
-        "input": query
+        "input": quote(query)
     }
 
-    async with aiohttp.ClientSession() as cs:
-        async with cs.get('https://www.cleverbot.com/getreply', params=params) as r:
-            res = await r.json()
-            bot.convs[msg.author] = res['cs']
-            return res['output']
+    print('Sending "{}" to cleverbot'.format(params['input']))
+    try:
+        async with aiohttp.ClientSession() as cs:
+            async with cs.get('https://www.cleverbot.com/getreply', params=params) as r:
+                res = await r.json(encoding='utf-8')
+                bot.convs[msg.author] = res['cs']
+                print('Response from cleverbot : {}'.format(res['output']))
+                return res['output']
+    except Exception as e:
+        print('Something went wrong contacting cleverbot : {}'.format(e))
 
 @bot.event
 async def on_message(msg):
     if msg.content.startswith(bot.user.mention):
         async with msg.channel.typing():
-            await msg.channel.send('{} {}'.format(msg.author.mention, await respond(msg, msg.content.strip(bot.user.mention))))
+            await msg.channel.send('{} {}'.format(msg.author.mention, await respond(msg, msg.content.strip(bot.user.mention).strip(' '))))
 
 @bot.event
 async def on_ready():
