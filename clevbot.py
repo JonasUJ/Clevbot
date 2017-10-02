@@ -1,5 +1,6 @@
 """Bot that interacts with the cleverbot.com api"""
 
+import os
 import json
 from urllib.parse import quote
 
@@ -17,6 +18,7 @@ for k, v in c.items():
     setattr(config, k, v)
 bot = commands.Bot(command_prefix=None)
 bot.convs = dict()
+bot.config = config
 
 
 async def respond(msg, query):
@@ -56,9 +58,18 @@ async def on_message(msg):
 
 @bot.event
 async def on_ready():
+    print('-'*20)
     print('Logged in as:', bot.user.name)
     print('Id:', bot.user.id)
     await bot.change_presence(game=discord.Game(name='@{} to chat with me'.format(bot.user.display_name), type=0))
 
 if __name__ == '__main__':
+
+    # Load extensions
+    for cog in os.listdir('cogs'):
+        name, extension = os.path.splitext(cog)
+        if extension == '.py':
+            bot.load_extension('cogs.{}'.format(name))
+            print('Loaded cog :', name)
+
     bot.run(config.Bot_token)

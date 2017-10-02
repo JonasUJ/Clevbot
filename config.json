@@ -1,4 +1,13 @@
 {
     "Bot_token": "",
-    "Cleverbot_api_key": ""
+    "Cleverbot_api_key": "",
+    "cogs": {
+        "subscriber_count": {
+            "channel_name": "",
+            "key": "",
+            "text_channels": [
+                ""
+            ]
+        }
+    }
 }
