@@ -4,6 +4,7 @@ import os
 import json
 from urllib.parse import quote
 
+import requests
 import aiohttp
 import discord
 from discord.ext import commands
@@ -16,10 +17,10 @@ with open('config.json') as fp:
     c = json.load(fp)
 for k, v in c.items():
     setattr(config, k, v)
-bot = commands.Bot(command_prefix=None)
+bot = commands.Bot(command_prefix='!')
 bot.convs = dict()
 bot.config = config
-
+caturl = 'http://thecatapi.com/api/images/get?format=src&type=gif'
 
 async def respond(msg, query):
     print('-'*20)
@@ -50,11 +51,21 @@ async def respond(msg, query):
     except Exception as e:
         print('Something went wrong contacting cleverbot : {}'.format(e))
 
+@bot.command()
+async def cat(ctx):
+    try:
+        with requests.get(caturl) as resp:
+            await ctx.send(resp.url)
+    except:
+        await ctx.send('Couldn\'t find a cat, maybe try again?')
+
 @bot.event
 async def on_message(msg):
     if msg.content.startswith(bot.user.mention):
         async with msg.channel.typing():
             await msg.channel.send('{} {}'.format(msg.author.mention, await respond(msg, msg.content.strip(bot.user.mention).strip(' '))))
+    else:
+        await bot.process_commands(msg)
 
 @bot.event
 async def on_ready():
